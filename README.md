@@ -4,6 +4,8 @@ PowerShell module to expose Gremlin.NET
 
 ## Testing
 
+**Define variables**
+
 ```PowerShell
 $hostname = "cosmos-ENDPOINT.gremlin.cosmos.azure.com"
 $authKey = ConvertTo-SecureString -AsPlainText -Force -String 'COSMOSDB-KEY'
@@ -11,9 +13,22 @@ $database = "DBNAME"
 $collection = 'GRAOHCOLLECTION' 
 $Credential = New-Object System.Management.Automation.PSCredential "/dbs/$database/colls/$collection", $authKey
 
-Import-Module PoshGremlin\bin\Debug\PoshGremlin.dll 
+$gremlinParames = @{
+    Hostname = $hostname
+    Credential = $credential
+}
+```
 
-Connect-CosmosDBGraph -Hostname $hostname -Port 443 -Credential $Credential 
+**Import Module (DLL)**
+
+```PowerShell
+Import-Module PoshGremlin\bin\Release\PoshGremlin.dll 
+```
+
+**Run basic Gremlin query**
+
+```PowerShell
+"g.V().has('label','directoryrole')" | Invoke-Gremlin @gremlinParams | convertTo-Json -Depth 10 
 ```
 
 ## Credits
