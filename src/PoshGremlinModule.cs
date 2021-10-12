@@ -1,13 +1,18 @@
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Management.Automation;
 using Gremlin.Net.Driver;
 using Gremlin.Net.Structure.IO.GraphSON;
+using Newtonsoft.Json.Linq;
 
-namespace MyModule
+namespace PoshGremlin
 {
-    [Cmdlet(VerbsCommunications.Connect, "CosmosDBGraph")]
-    public class ConnectCosmosDBGraph : PSCmdlet
+    [Cmdlet(VerbsLifecycle.Invoke, "Gremlin")]
+    public class InvokeGremlin : PSCmdlet
     {
-        [Parameter(Position = 0, Mandatory = true)]
+        [Parameter(Mandatory = true)]
         public string Hostname { get; set; }
 
         [Parameter]
@@ -19,6 +24,9 @@ namespace MyModule
         [Parameter(Mandatory = true)]
         public PSCredential Credential { get; set; }
 
+        [Parameter(Mandatory = true, ValueFromPipeline = true)]
+        public string Query;
+
         private GremlinClient Client;
 
         protected override void BeginProcessing()
@@ -29,5 +37,38 @@ namespace MyModule
 
             Client = new GremlinClient(server, new GraphSON2MessageSerializer());
         }
+
+        protected override void ProcessRecord()
+        {
+            var sw = new Stopwatch();
+            WriteVerbose($"Executing GremlinQuery {Query}");
+            sw.Start();
+            var results = ExecuteQuery<dynamic>(Query).Result;
+            sw.Stop();
+            WriteVerbose($"Query Complete. {sw.Elapsed}");
+
+            foreach (var result in results)
+            {
+                PSObject output;
+
+                switch (result)
+                {
+                    default:
+                        WriteVerbose($"Processing default case: {result.GetType()}");
+                        output = new PSObject(result);
+                        break;
+                }
+
+                WriteObject(output, true);
+            }
+        }
+
+        protected override void EndProcessing()
+        {
+            WriteVerbose("Disconnecting GremlinClient");
+            Client.Dispose();
+        }
+
+        protected async Task<IReadOnlyCollection<T>> ExecuteQuery<T>(string query) => await Client.SubmitAsync<T>(query);
     }
 }
