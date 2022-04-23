@@ -10,13 +10,13 @@ Copy and Paste the following command to install this package using PowerShellGet
 Install-Module -Name PoshGremlin
 ```
 
-## Import Module
+## Example: Gremlin and Azure CosmosDB
+
+### Import Module
 
 ```PowerShell
 Import-Module PoshGremlin
 ```
-
-## Example: Gremlin and Azure CosmosDB
 
 ### Define variables
 
